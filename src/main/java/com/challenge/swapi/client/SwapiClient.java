@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.challenge.swapi.dto.FilmDetailResponseDTO;
 import com.challenge.swapi.dto.FilmsResponseDTO;
 import com.challenge.swapi.dto.PeopleResponseDTO;
 import com.challenge.swapi.dto.PersonDetailResponseDTO;
@@ -29,9 +30,14 @@ public class SwapiClient {
 		return restTemplate.getForObject(url, PersonDetailResponseDTO.class);
 	}
 
-	public FilmsResponseDTO getFilms() {
-		String url = baseUrl + "/films";
+	public FilmsResponseDTO getFilms(int page, int size) {
+		String url = baseUrl + "/films?page=" + page + "&limit=" + size;
 		return restTemplate.getForObject(url, FilmsResponseDTO.class);
+	}
+
+	public FilmDetailResponseDTO getFilmById(String id) {
+		String url = baseUrl + "/films/" + id;
+		return restTemplate.getForObject(url, FilmDetailResponseDTO.class);
 	}
 
 	private String normalizeBaseUrl(String value) {

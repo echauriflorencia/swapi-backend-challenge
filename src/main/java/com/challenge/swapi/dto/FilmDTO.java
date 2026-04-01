@@ -6,4 +6,5 @@ import lombok.Data;
 public class FilmDTO {
 	private String uid;
 	private String description;
+	private FilmPropertiesDTO properties;
 }

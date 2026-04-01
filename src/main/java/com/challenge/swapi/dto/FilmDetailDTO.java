@@ -5,5 +5,6 @@ import lombok.Data;
 @Data
 public class FilmDetailDTO {
     private String uid;
+    private String description;
     private FilmPropertiesDTO properties;
 }
