@@ -20,15 +20,17 @@ public class PeopleService {
 		this.swapiClient = swapiClient;
 	}
 
-	public PeopleResponseDTO getPeople(String name) {
-		PeopleResponseDTO response = swapiClient.getPeople();
+	public PeopleResponseDTO getPeople(String name, int page, int size) {
+		PeopleResponseDTO response = swapiClient.getPeople(page, size);
 
 		if (name == null || name.isEmpty()) {
 			return response;
 		}
 
-		List<PersonDTO> filtered = response.getResults().stream()
-				.filter(p -> p.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
+		List<PersonDTO> filtered = response.getResults()
+				.stream()
+				.filter(p -> p.getName().toLowerCase().contains(name.toLowerCase()))
+				.collect(Collectors.toList());
 
 		response.setResults(filtered);
 		return response;

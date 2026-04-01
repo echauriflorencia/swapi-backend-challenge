@@ -15,8 +15,8 @@ public class SwapiClient {
 		this.restTemplate = new RestTemplate();
 	}
 
-	public PeopleResponseDTO getPeople() {
-		String url = "https://www.swapi.tech/api/people";
+	public PeopleResponseDTO getPeople(int page, int size) {
+		String url = "https://www.swapi.tech/api/people?page=" + page + "&limit=" + size;
 		return restTemplate.getForObject(url, PeopleResponseDTO.class);
 	}
 
