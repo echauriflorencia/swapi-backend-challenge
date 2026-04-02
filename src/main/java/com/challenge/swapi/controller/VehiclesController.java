@@ -23,12 +23,13 @@ public class VehiclesController {
 	
 	@GetMapping("/vehicles")
 	public VehiclesResponseDTO getVehicles(
+			@RequestParam(required = false) String id,
 			@RequestParam(required = false) String name,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size
 	) {
         validatePagination(page, size);
-		return vehiclesService.getVehicles(name, page, size);
+		return vehiclesService.getVehicles(id, name, page, size);
 	}
 	
 	@GetMapping("/vehicles/{id}")

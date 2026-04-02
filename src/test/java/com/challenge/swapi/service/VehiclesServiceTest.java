@@ -39,9 +39,9 @@ class VehiclesServiceTest {
             vehicle("4", "Sand Crawler"),
             vehicle("6", "T-16 skyhopper")
         );
-        when(swapiClient.getVehicles(eq(1), eq(10))).thenReturn(upstream);
+        when(swapiClient.getVehicles(eq(1), eq(50))).thenReturn(upstream);
 
-        VehiclesResponseDTO result = vehiclesService.getVehicles("sand", 1, 10);
+        VehiclesResponseDTO result = vehiclesService.getVehicles("", "sand", 1, 10);
 
         assertThat(result.getResults()).hasSize(1);
         assertThat(result.getResults().getFirst().getName()).isEqualTo("Sand Crawler");
@@ -53,9 +53,23 @@ class VehiclesServiceTest {
         upstream.setResults(java.util.List.of());
         when(swapiClient.getVehicles(eq(1), eq(10))).thenReturn(upstream);
 
-        VehiclesResponseDTO result = vehiclesService.getVehicles("", 1, 10);
+        VehiclesResponseDTO result = vehiclesService.getVehicles("", "", 1, 10);
 
         assertThat(result.getResults()).isEmpty();
+    }
+
+    @Test
+    void getVehiclesFiltersByIdAndName() {
+        VehiclesResponseDTO upstream = vehiclesResponse(
+            vehicle("4", "Sand Crawler"),
+            vehicle("6", "T-16 skyhopper")
+        );
+        when(swapiClient.getVehicles(eq(1), eq(50))).thenReturn(upstream);
+
+        VehiclesResponseDTO result = vehiclesService.getVehicles("4", "sand", 1, 10);
+
+        assertThat(result.getResults()).hasSize(1);
+        assertThat(result.getResults().getFirst().getUid()).isEqualTo("4");
     }
 
     @Test

@@ -38,7 +38,7 @@ class PeopleServiceTest {
         PeopleResponseDTO upstream = peopleResponse(person("1", "Luke Skywalker"), person("2", "Leia Organa"));
         when(swapiClient.getPeople(eq(1), eq(10))).thenReturn(upstream);
 
-        PeopleResponseDTO result = peopleService.getPeople("", 1, 10);
+        PeopleResponseDTO result = peopleService.getPeople("", "", 1, 10);
 
         assertThat(result.getResults()).hasSize(2);
     }
@@ -50,11 +50,25 @@ class PeopleServiceTest {
             person("2", "Leia Organa"),
             person("3", "Han Solo")
         );
-        when(swapiClient.getPeople(eq(1), eq(10))).thenReturn(upstream);
+        when(swapiClient.getPeople(eq(1), eq(50))).thenReturn(upstream);
 
-        PeopleResponseDTO result = peopleService.getPeople("le", 1, 10);
+        PeopleResponseDTO result = peopleService.getPeople("", "le", 1, 10);
 
         assertThat(result.getResults()).extracting("name").containsExactly("Leia Organa");
+    }
+
+    @Test
+    void getPeopleFiltersByIdAndName() {
+        PeopleResponseDTO upstream = peopleResponse(
+            person("1", "Luke Skywalker"),
+            person("2", "Leia Organa")
+        );
+        when(swapiClient.getPeople(eq(1), eq(50))).thenReturn(upstream);
+
+        PeopleResponseDTO result = peopleService.getPeople("2", "leia", 1, 10);
+
+        assertThat(result.getResults()).hasSize(1);
+        assertThat(result.getResults().getFirst().getUid()).isEqualTo("2");
     }
 
     @Test

@@ -22,12 +22,13 @@ public class PeopleController {
 
 	@GetMapping("/people")
 	public PeopleResponseDTO getPeople(
+			@RequestParam(required = false) String id,
 			@RequestParam(required = false) String name,
 			@RequestParam(defaultValue = "1") int page, 
 			@RequestParam(defaultValue = "10") int size
 	) {
 		validatePagination(page, size);
-		return peopleService.getPeople(name, page, size);
+		return peopleService.getPeople(id, name, page, size);
 	}
 
 	@GetMapping("/people/{id}")

@@ -23,12 +23,15 @@ public class FilmsController {
 
 	@GetMapping("/films")
 	public FilmsResponseDTO getFilms(
+			@RequestParam(required = false) String id,
 			@RequestParam(required = false) String title,
+			@RequestParam(required = false) String name,
 			@RequestParam(defaultValue = "1") int page, 
 			@RequestParam(defaultValue = "10") int size
 	) {
 		validatePagination(page, size);
-		return filmsService.getFilms(title, page, size);
+		String effectiveTitle = title != null ? title : name;
+		return filmsService.getFilms(id, effectiveTitle, page, size);
 	}
 
 	@GetMapping("/films/{id}")

@@ -23,12 +23,13 @@ public class StarshipsController {
 	
 	@GetMapping("/starships")
     public StarshipsResponseDTO getStarships(
+			@RequestParam(required = false) String id,
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         validatePagination(page, size);
-        return starshipsService.getStarships(name, page, size);
+		return starshipsService.getStarships(id, name, page, size);
     }
 	
 	@GetMapping("/starships/{id}")

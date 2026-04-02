@@ -4,6 +4,7 @@ import static com.challenge.swapi.fixtures.TestFixtures.filmDetail;
 import static com.challenge.swapi.fixtures.TestFixtures.peopleResponse;
 import static com.challenge.swapi.fixtures.TestFixtures.person;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -71,7 +72,7 @@ class ApiIntegrationTest {
 
     @Test
     void peopleEndpointSupportsPaginationAndFiltersWithValidToken() throws Exception {
-        when(peopleService.getPeople(eq("luke"), eq(2), eq(5)))
+        when(peopleService.getPeople(isNull(), eq("luke"), eq(2), eq(5)))
             .thenReturn(peopleResponse(person("1", "Luke Skywalker")));
 
         mockMvc.perform(get("/people")
@@ -82,7 +83,24 @@ class ApiIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.results[0].name").value("Luke Skywalker"));
 
-        verify(peopleService).getPeople("luke", 2, 5);
+        verify(peopleService).getPeople(null, "luke", 2, 5);
+    }
+
+    @Test
+    void peopleEndpointSupportsCombinedIdAndNameFiltersWithValidToken() throws Exception {
+        when(peopleService.getPeople(eq("1"), eq("luke"), eq(1), eq(5)))
+            .thenReturn(peopleResponse(person("1", "Luke Skywalker")));
+
+        mockMvc.perform(get("/people")
+                .header("Authorization", bearerToken())
+                .param("id", "1")
+                .param("name", "luke")
+                .param("page", "1")
+                .param("size", "5"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.results[0].uid").value("1"));
+
+        verify(peopleService).getPeople("1", "luke", 1, 5);
     }
 
     @Test

@@ -40,9 +40,9 @@ class FilmsServiceTest {
             film("2", "The Empire Strikes Back"),
             film("3", "Return of the Jedi")
         );
-        when(swapiClient.getFilms(eq(1), eq(1))).thenReturn(upstream);
+        when(swapiClient.getFilms(eq(1), eq(50))).thenReturn(upstream);
 
-        FilmsResponseDTO result = filmsService.getFilms("the", 1, 1);
+        FilmsResponseDTO result = filmsService.getFilms("", "the", 1, 1);
 
         assertThat(result.getResult()).hasSize(1);
         assertThat(result.getResult().getFirst().getProperties().getTitle()).isEqualTo("The Empire Strikes Back");
@@ -54,11 +54,25 @@ class FilmsServiceTest {
             film("1", "A New Hope"),
             film("2", "The Empire Strikes Back")
         );
-        when(swapiClient.getFilms(eq(3), eq(1))).thenReturn(upstream);
+        when(swapiClient.getFilms(eq(1), eq(50))).thenReturn(upstream);
 
-        FilmsResponseDTO result = filmsService.getFilms("", 3, 1);
+        FilmsResponseDTO result = filmsService.getFilms("", "the", 3, 1);
 
         assertThat(result.getResult()).isEmpty();
+    }
+
+    @Test
+    void getFilmsFiltersByIdAndTitle() {
+        FilmsResponseDTO upstream = filmsResponse(
+            film("1", "A New Hope"),
+            film("2", "The Empire Strikes Back")
+        );
+        when(swapiClient.getFilms(eq(1), eq(50))).thenReturn(upstream);
+
+        FilmsResponseDTO result = filmsService.getFilms("2", "empire", 1, 10);
+
+        assertThat(result.getResult()).hasSize(1);
+        assertThat(result.getResult().getFirst().getUid()).isEqualTo("2");
     }
 
     @Test

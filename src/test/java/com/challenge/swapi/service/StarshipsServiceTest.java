@@ -39,9 +39,9 @@ class StarshipsServiceTest {
             starship("1", "Death Star"),
             starship("2", "X-wing")
         );
-        when(swapiClient.getStarships(eq(1), eq(10))).thenReturn(upstream);
+        when(swapiClient.getStarships(eq(1), eq(50))).thenReturn(upstream);
 
-        StarshipsResponseDTO result = starshipsService.getStarships("star", 1, 10);
+        StarshipsResponseDTO result = starshipsService.getStarships("", "star", 1, 10);
 
         assertThat(result.getResults()).hasSize(1);
         assertThat(result.getResults().getFirst().getName()).isEqualTo("Death Star");
@@ -53,9 +53,23 @@ class StarshipsServiceTest {
         upstream.setResults(java.util.List.of());
         when(swapiClient.getStarships(eq(1), eq(10))).thenReturn(upstream);
 
-        StarshipsResponseDTO result = starshipsService.getStarships("", 1, 10);
+        StarshipsResponseDTO result = starshipsService.getStarships("", "", 1, 10);
 
         assertThat(result.getResults()).isEmpty();
+    }
+
+    @Test
+    void getStarshipsFiltersByIdAndName() {
+        StarshipsResponseDTO upstream = starshipsResponse(
+            starship("1", "Death Star"),
+            starship("2", "X-wing")
+        );
+        when(swapiClient.getStarships(eq(1), eq(50))).thenReturn(upstream);
+
+        StarshipsResponseDTO result = starshipsService.getStarships("1", "death", 1, 10);
+
+        assertThat(result.getResults()).hasSize(1);
+        assertThat(result.getResults().getFirst().getUid()).isEqualTo("1");
     }
 
     @Test

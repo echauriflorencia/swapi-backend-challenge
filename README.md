@@ -74,10 +74,13 @@ Expected response: `403 Forbidden` when no valid JWT is provided.
 
 All these endpoints require a valid JWT token.
 
+Filtering semantics: when `id`, `name`, or `title` is provided, filtering is applied first and pagination is applied over the filtered set.
+
 ### 4.1 People
 
 - `GET /people`
 	- Query params:
+		- `id` (optional)
 		- `name` (optional)
 		- `page` (default `1`, minimum `1`)
 		- `size` (default `10`, range `1..50`)
@@ -93,9 +96,9 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/people?name=luke&p
 
 - `GET /films`
 	- Query params:
+		- `id` (optional)
 		- `title` (optional)
 		- `name` (optional, alias for `title`)
-		- `id` (optional)
 		- `page` (default `1`, minimum `1`)
 		- `size` (default `10`, range `1..50`)
 - `GET /films/{id}`
@@ -119,7 +122,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/films/1"
 Example:
 
 ```bash
-curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/starships?id=9&page=1&size=10"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/starships?id=9&name=star&page=1&size=10"
 ```
 
 ### 4.4 Vehicles
@@ -135,7 +138,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/starships?id=9&pag
 Example:
 
 ```bash
-curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/vehicles?name=sand&page=1&size=10"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/vehicles?id=4&name=sand&page=1&size=10"
 ```
 
 ## 5. Automated Tests
