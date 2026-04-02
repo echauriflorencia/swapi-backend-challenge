@@ -25,10 +25,12 @@ Set environment variables before starting:
 ```bash
 export APP_SECURITY_USER_NAME=swapi
 export APP_SECURITY_USER_PASSWORD=swapi123
-export APP_SECURITY_JWT_SECRET=secret-jwt-key
+export APP_SECURITY_JWT_SECRET=changeit-changeit-changeit-changeit
 ```
 
 If they are not set, default values from `application.properties` are used.
+
+Legacy env vars (`APP_USERNAME`, `APP_PASSWORD`, `JWT_SECRET`) are also accepted for backward compatibility.
 
 ### 2.2 Run the app
 
