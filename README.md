@@ -223,3 +223,11 @@ curl -i http://localhost:8080/people
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+## 8. Deployment
+
+The application is deployed and available at:
+
+https://swapi-backend-challenge.onrender.com/
+
+Note: The service runs on Render's free tier and may take up to 30–50 seconds to respond on the first request after inactivity.
