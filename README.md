@@ -135,6 +135,53 @@ Example:
 ```bash
 curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/vehicles?name=sand&page=1&size=10"
 ```
+
+## 5. Automated Tests
+
+The project includes automated unit and integration tests to prevent regressions.
+
+### 5.1 Test Scope
+
+- Unit tests for services:
+	- `PeopleService`
+	- `FilmsService`
+	- `StarshipsService`
+	- `VehiclesService`
+- Integration tests with `MockMvc` for:
+	- Authentication required on protected endpoints
+	- JWT login and authenticated calls
+	- Pagination and filter handling
+	- Error mapping: `400`, `404`, `503`
+
+### 5.2 Test Files
+
+- `src/test/java/com/challenge/swapi/service/PeopleServiceTest.java`
+- `src/test/java/com/challenge/swapi/service/FilmsServiceTest.java`
+- `src/test/java/com/challenge/swapi/service/StarshipsServiceTest.java`
+- `src/test/java/com/challenge/swapi/service/VehiclesServiceTest.java`
+- `src/test/java/com/challenge/swapi/integration/ApiIntegrationTest.java`
+- `src/test/java/com/challenge/swapi/fixtures/TestFixtures.java`
+
+### 5.3 Run Tests
+
+Run full test suite:
+
+```bash
+./mvnw test
+```
+
+Run a single test class:
+
+```bash
+./mvnw -Dtest=ApiIntegrationTest test
+```
+
+### 5.4 Determinism
+
+- Unit tests mock `SwapiClient`.
+- Integration tests use mocked services (`@MockBean`) for controller/security behavior.
+- No real SWAPI calls are required during test execution.
+
 ## 6. Setup From Scratch (Smoke Test)
 
 1. Clone the repo.
