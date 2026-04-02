@@ -10,6 +10,8 @@ import com.challenge.swapi.dto.PeopleResponseDTO;
 import com.challenge.swapi.dto.PersonDetailResponseDTO;
 import com.challenge.swapi.dto.StarshipDetailResponseDTO;
 import com.challenge.swapi.dto.StarshipsResponseDTO;
+import com.challenge.swapi.dto.VehicleDetailResponseDTO;
+import com.challenge.swapi.dto.VehiclesResponseDTO;
 
 @Component
 public class SwapiClient {
@@ -50,6 +52,16 @@ public class SwapiClient {
 	public StarshipDetailResponseDTO getStarshipById(String id) {
 		String url = baseUrl + "/starships/" + id;
 		return restTemplate.getForObject(url, StarshipDetailResponseDTO.class);
+	}
+	
+	public VehiclesResponseDTO getVehicles(int page, int size) {
+		String url = baseUrl + "/vehicles?page=" + page + "&limit=" + size;
+		return restTemplate.getForObject(url, VehiclesResponseDTO.class);
+	}
+
+	public VehicleDetailResponseDTO getVehicleById(String id) {
+		String url = baseUrl + "/vehicles/" + id;
+		return restTemplate.getForObject(url, VehicleDetailResponseDTO.class);
 	}
 	
 	private String normalizeBaseUrl(String value) {
