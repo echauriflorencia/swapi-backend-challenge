@@ -8,11 +8,71 @@ Exposed resources:
 - `starships`
 - `vehicles`
 
-## Endpoints
+## 1. Requirements
 
-All these endpoints require auth.
+- Java 21
+- Internet access (the app queries SWAPI in real time)
+- `curl` for manual testing
 
-### People
+## 2. Quick Setup
+
+### 2.1 Access credentials
+
+The application uses in-memory credentials and JWT.
+
+Set environment variables before starting:
+
+```bash
+export APP_SECURITY_USER_NAME=swapi
+export APP_SECURITY_USER_PASSWORD=swapi123
+export APP_SECURITY_JWT_SECRET=secret-jwt-key
+```
+
+If they are not set, default values from `application.properties` are used.
+
+### 2.2 Run the app
+
+```bash
+./mvnw spring-boot:run
+```
+
+By default, it runs at `http://localhost:8080`.
+
+## 3. Authentication Flow
+
+Security is intentionally simple for this technical challenge:
+- JWT Bearer authentication
+- In-memory user
+- Stateless sessions
+- Spring Security default `401/403` handling (no custom security error handlers)
+
+Get a token with `POST /auth/login`:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+	-H "Content-Type: application/json" \
+	-d '{"username":"swapi","password":"swapi123"}' | jq -r '.token')
+```
+
+Use that token in protected endpoints:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/people
+```
+
+### 3.1 Example request without credentials
+
+```bash
+curl -i http://localhost:8080/people
+```
+
+Expected response: `403 Forbidden` when no valid JWT is provided.
+
+## 4. Endpoints
+
+All these endpoints require a valid JWT token.
+
+### 4.1 People
 
 - `GET /people`
 	- Query params:
@@ -24,10 +84,10 @@ All these endpoints require auth.
 Example:
 
 ```bash
-curl -u swapi:swapi123 "http://localhost:8080/people?name=luke&page=1&size=5"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/people?name=luke&page=1&size=5"
 ```
 
-### Films
+### 4.2 Films
 
 - `GET /films`
 	- Query params:
@@ -41,10 +101,10 @@ curl -u swapi:swapi123 "http://localhost:8080/people?name=luke&page=1&size=5"
 Detail example (stable):
 
 ```bash
-curl -u swapi:swapi123 "http://localhost:8080/films/1"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/films/1"
 ```
 
-### Starships
+### 4.3 Starships
 
 - `GET /starships`
 	- Query params:
@@ -57,10 +117,10 @@ curl -u swapi:swapi123 "http://localhost:8080/films/1"
 Example:
 
 ```bash
-curl -u swapi:swapi123 "http://localhost:8080/starships?id=9&page=1&size=10"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/starships?id=9&page=1&size=10"
 ```
 
-### Vehicles
+### 4.4 Vehicles
 
 - `GET /vehicles`
 	- Query params:
@@ -73,11 +133,46 @@ curl -u swapi:swapi123 "http://localhost:8080/starships?id=9&page=1&size=10"
 Example:
 
 ```bash
-curl -u swapi:swapi123 "http://localhost:8080/vehicles?name=sand&page=1&size=10"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/vehicles?name=sand&page=1&size=10"
+```
+## 6. Setup From Scratch (Smoke Test)
+
+1. Clone the repo.
+2. Export credentials:
+
+```bash
+export APP_SECURITY_USER_NAME=swapi
+export APP_SECURITY_USER_PASSWORD=swapi123
+export APP_SECURITY_JWT_SECRET=changeit-changeit-changeit-changeit
 ```
 
+3. Run the app:
 
-## API Documentation (OpenAPI)
+```bash
+./mvnw spring-boot:run
+```
+
+4. Get token:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+	-H "Content-Type: application/json" \
+	-d '{"username":"swapi","password":"swapi123"}' | jq -r '.token')
+```
+
+5. Verify authenticated access:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/people?page=1&size=2"
+```
+
+6. Verify access is blocked without auth:
+
+```bash
+curl -i http://localhost:8080/people
+```
+
+## 7. API Documentation (OpenAPI)
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
