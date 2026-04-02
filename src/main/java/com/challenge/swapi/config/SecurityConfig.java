@@ -20,7 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${app.security.public-endpoints:/,/auth/**,/actuator/health,/error}")
+    @Value("${app.security.public-endpoints:/,/auth/**,/actuator/health,/error,/v3/api-docs/**,/swagger-ui/**,/swagger-ui.html}")
     private String[] publicEndpoints;
 
     @Value("${app.security.allow-frames:false}")
