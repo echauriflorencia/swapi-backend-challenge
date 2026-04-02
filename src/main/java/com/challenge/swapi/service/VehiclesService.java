@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import com.challenge.swapi.client.SwapiClient;
 import com.challenge.swapi.dto.VehicleDTO;
 import com.challenge.swapi.dto.VehicleDetailResponseDTO;
 import com.challenge.swapi.dto.VehiclesResponseDTO;
+import com.challenge.swapi.exception.ResourceNotFoundException;
+import com.challenge.swapi.exception.UpstreamServiceException;
 
 @Service
 public class VehiclesService {
@@ -37,10 +40,12 @@ public class VehiclesService {
 	}
 
 	public VehicleDetailResponseDTO getVehicleById(String id) {
-		try {
-			return swapiClient.getVehicleById(id);
-		} catch (RestClientException e) {
-			throw new RuntimeException("Vehicle not found");
-		}
-	}
+        try {
+            return swapiClient.getVehicleById(id);
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Vehicle not found with id: " + id);
+        } catch (RestClientException e) {
+            throw new UpstreamServiceException("SWAPI request failed while fetching vehicle with id: " + id, e);
+        }
+    }
 }

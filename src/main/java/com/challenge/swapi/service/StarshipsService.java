@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import com.challenge.swapi.client.SwapiClient;
 import com.challenge.swapi.dto.StarshipDTO;
 import com.challenge.swapi.dto.StarshipDetailResponseDTO;
 import com.challenge.swapi.dto.StarshipsResponseDTO;
+import com.challenge.swapi.exception.ResourceNotFoundException;
+import com.challenge.swapi.exception.UpstreamServiceException;
 
 @Service
 public class StarshipsService {
@@ -39,10 +42,12 @@ public class StarshipsService {
 	}
 
 	public StarshipDetailResponseDTO getStarshipById(String id) {
-		try {
-			return swapiClient.getStarshipById(id);
-		} catch (RestClientException e) {
-			throw new RuntimeException("Starship not found");
-		}
-	}
+        try {
+            return swapiClient.getStarshipById(id);
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Starship not found with id: " + id);
+        } catch (RestClientException e) {
+            throw new UpstreamServiceException("SWAPI request failed while fetching starship with id: " + id, e);
+        }
+    }
 }

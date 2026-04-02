@@ -4,11 +4,14 @@ import com.challenge.swapi.client.SwapiClient;
 import com.challenge.swapi.dto.PeopleResponseDTO;
 import com.challenge.swapi.dto.PersonDTO;
 import com.challenge.swapi.dto.PersonDetailResponseDTO;
+import com.challenge.swapi.exception.ResourceNotFoundException;
+import com.challenge.swapi.exception.UpstreamServiceException;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 @Service
@@ -36,11 +39,13 @@ public class PeopleService {
 		return response;
 	}
 
-	public PersonDetailResponseDTO getPersonById(String id) {
-		try {
-			return swapiClient.getPersonById(id);
-		} catch (RestClientException e) {
-			throw new RuntimeException("Person not found");
-		}
-	}
+	 public PersonDetailResponseDTO getPersonById(String id) {
+	    	try {
+	            return swapiClient.getPersonById(id);
+	        } catch (HttpClientErrorException.NotFound e) {
+	            throw new ResourceNotFoundException("Person not found with id: " + id);
+	        } catch (RestClientException e) {
+	            throw new UpstreamServiceException("SWAPI request failed while fetching person with id: " + id, e);
+	        }
+	    }
 }

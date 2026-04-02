@@ -7,10 +7,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.challenge.swapi.dto.FilmDetailResponseDTO;
 import com.challenge.swapi.dto.FilmsResponseDTO;
+import com.challenge.swapi.exception.InvalidRequestException;
 import com.challenge.swapi.service.FilmsService;
 
 @RestController
 public class FilmsController {
+
+    private static final int MAX_PAGE_SIZE = 50;
 
 	private final FilmsService filmsService;
 
@@ -19,9 +22,12 @@ public class FilmsController {
 	}
 
 	@GetMapping("/films")
-	public FilmsResponseDTO getFilms(@RequestParam(required = false) String title,
-			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
-
+	public FilmsResponseDTO getFilms(
+			@RequestParam(required = false) String title,
+			@RequestParam(defaultValue = "1") int page, 
+			@RequestParam(defaultValue = "10") int size
+	) {
+		validatePagination(page, size);
 		return filmsService.getFilms(title, page, size);
 	}
 
@@ -29,5 +35,16 @@ public class FilmsController {
 	public FilmDetailResponseDTO getFilmById(@PathVariable String id) {
 		return filmsService.getFilmById(id);
 	}
+	
+	private void validatePagination(int page, int size) {
+        if (page < 1) {
+            throw new InvalidRequestException("Parameter 'page' must be greater than or equal to 1");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new InvalidRequestException(
+                    "Parameter 'size' must be between 1 and " + MAX_PAGE_SIZE
+            );
+        }
+    }
 
 }

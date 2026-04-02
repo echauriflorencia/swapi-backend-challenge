@@ -6,12 +6,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import com.challenge.swapi.client.SwapiClient;
 import com.challenge.swapi.dto.FilmDTO;
 import com.challenge.swapi.dto.FilmDetailResponseDTO;
 import com.challenge.swapi.dto.FilmsResponseDTO;
+import com.challenge.swapi.exception.ResourceNotFoundException;
+import com.challenge.swapi.exception.UpstreamServiceException;
 
 @Service
 public class FilmsService {
@@ -53,10 +56,12 @@ public class FilmsService {
 	}
 
 	public FilmDetailResponseDTO getFilmById(String id) {
-		try {
-			return swapiClient.getFilmById(id);
-		} catch (RestClientException e) {
-			throw new RuntimeException("Film not found");
-		}
-	}
+        try {
+            return swapiClient.getFilmById(id);
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Film not found with id: " + id);
+        } catch (RestClientException e) {
+            throw new UpstreamServiceException("SWAPI request failed while fetching film with id: " + id, e);
+        }
+    }
 }
