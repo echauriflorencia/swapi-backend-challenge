@@ -1,9 +1,6 @@
 package com.challenge.swapi.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -17,9 +14,7 @@ import com.challenge.swapi.exception.ResourceNotFoundException;
 import com.challenge.swapi.exception.UpstreamServiceException;
 
 @Service
-public class FilmsService {
-
-	private static final int SWAPI_FETCH_PAGE_SIZE = 50;
+public class FilmsService extends AbstractPagedResourceService<FilmDTO, FilmsResponseDTO> {
 
 	private final SwapiClient swapiClient;
 
@@ -28,65 +23,47 @@ public class FilmsService {
 	}
 
 	public FilmsResponseDTO getFilms(String id, String title, int page, int size) {
-		if (!hasFilters(id, title)) {
-			return swapiClient.getFilms(page, size);
-		}
-
-		List<FilmDTO> filtered = fetchAllFilms().stream()
-				.filter(f -> matchesId(f, id))
-				.filter(f -> matchesTitle(f, title))
-				.collect(Collectors.toList());
-
-		FilmsResponseDTO response = new FilmsResponseDTO();
-		response.setMessage("ok");
-		response.setTotal_records(filtered.size());
-		response.setTotal_pages((int) Math.ceil((double) filtered.size() / size));
-		response.setResult(paginate(filtered, page, size));
-		response.setPrevious(null);
-		response.setNext(null);
-		return response;
+		return getResources(id, title, page, size);
 	}
 
-	private List<FilmDTO> fetchAllFilms() {
-		List<FilmDTO> all = new ArrayList<>();
-		int page = 1;
-		int totalPages = 1;
-
-		while (page <= totalPages) {
-			FilmsResponseDTO response = swapiClient.getFilms(page, SWAPI_FETCH_PAGE_SIZE);
-			if (response == null || response.getResult() == null || response.getResult().isEmpty()) {
-				break;
-			}
-			all.addAll(response.getResult());
-			totalPages = response.getTotal_pages() > 0 ? response.getTotal_pages() : page;
-			page++;
-		}
-
-		return all;
+	@Override
+	protected FilmsResponseDTO fetchPage(int page, int size) {
+		return swapiClient.getFilms(page, size);
 	}
 
-	private boolean hasFilters(String id, String title) {
-		return id != null && !id.isBlank() || title != null && !title.isBlank();
+	@Override
+	protected List<FilmDTO> extractResults(FilmsResponseDTO response) {
+		return response == null ? null : response.getResult();
 	}
 
-	private boolean matchesId(FilmDTO film, String id) {
+	@Override
+	protected int extractTotalPages(FilmsResponseDTO response) {
+		return response == null ? 0 : response.getTotal_pages();
+	}
+
+	@Override
+	protected boolean matchesId(FilmDTO film, String id) {
 		return id == null || id.isBlank() || id.equals(film.getUid());
 	}
 
-	private boolean matchesTitle(FilmDTO film, String title) {
-		return title == null || title.isBlank()
+	@Override
+	protected boolean matchesNameOrTitle(FilmDTO film, String nameOrTitle) {
+		return nameOrTitle == null || nameOrTitle.isBlank()
 				|| film.getProperties() != null
 				&& film.getProperties().getTitle() != null
-				&& film.getProperties().getTitle().toLowerCase().contains(title.toLowerCase());
+				&& film.getProperties().getTitle().toLowerCase().contains(nameOrTitle.toLowerCase());
 	}
 
-	private List<FilmDTO> paginate(List<FilmDTO> results, int page, int size) {
-		int fromIndex = (page - 1) * size;
-		if (fromIndex >= results.size()) {
-			return Collections.emptyList();
-		}
-		int toIndex = Math.min(fromIndex + size, results.size());
-		return results.subList(fromIndex, toIndex);
+	@Override
+	protected FilmsResponseDTO buildFilteredResponse(List<FilmDTO> pagedResults, int totalRecords, int pageSize) {
+		FilmsResponseDTO response = new FilmsResponseDTO();
+		response.setMessage("ok");
+		response.setTotal_records(totalRecords);
+		response.setTotal_pages(calculateTotalPages(totalRecords, pageSize));
+		response.setResult(pagedResults);
+		response.setPrevious(null);
+		response.setNext(null);
+		return response;
 	}
 
 	public FilmDetailResponseDTO getFilmById(String id) {

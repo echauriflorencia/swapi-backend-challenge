@@ -13,8 +13,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.challenge.swapi.dto.AuthLoginRequestDTO;
+import com.challenge.swapi.entity.AppRole;
+import com.challenge.swapi.entity.AppUser;
 import com.challenge.swapi.exception.ResourceNotFoundException;
 import com.challenge.swapi.exception.UpstreamServiceException;
+import com.challenge.swapi.repository.RoleRepository;
+import com.challenge.swapi.repository.UserRepository;
 import com.challenge.swapi.service.FilmsService;
 import com.challenge.swapi.service.PeopleService;
 import com.challenge.swapi.service.StarshipsService;
@@ -25,10 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,16 +45,25 @@ class ApiIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
     private PeopleService peopleService;
 
-    @MockBean
+    @MockitoBean
     private FilmsService filmsService;
 
-    @MockBean
+    @MockitoBean
     private StarshipsService starshipsService;
 
-    @MockBean
+    @MockitoBean
     private VehiclesService vehiclesService;
 
     @Test
@@ -147,8 +161,49 @@ class ApiIntegrationTest {
         verify(filmsService).getFilmById("1");
     }
 
+    @Test
+    void adminCanListRoles() throws Exception {
+        mockMvc.perform(get("/roles")
+                .header("Authorization", bearerToken()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.name == 'ADMIN')]").isArray())
+            .andExpect(jsonPath("$[?(@.name == 'USER')]").isArray());
+    }
+
+    @Test
+    void nonAdminUserCannotAccessRolesEndpoint() throws Exception {
+        String username = "only-user-" + System.nanoTime();
+        createUserWithSingleRole(username, "swapi123", "USER");
+
+        mockMvc.perform(get("/roles")
+                .header("Authorization", bearerToken(username, "swapi123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void existingStarshipsEndpointStillWorksWithValidToken() throws Exception {
+        mockMvc.perform(get("/starships")
+                .header("Authorization", bearerToken()))
+            .andExpect(status().isOk());
+
+        verify(starshipsService).getStarships(null, null, 1, 10);
+    }
+
+    @Test
+    void existingVehiclesEndpointStillWorksWithValidToken() throws Exception {
+        mockMvc.perform(get("/vehicles")
+                .header("Authorization", bearerToken()))
+            .andExpect(status().isOk());
+
+        verify(vehiclesService).getVehicles(null, null, 1, 10);
+    }
+
     private String bearerToken() throws Exception {
-        AuthLoginRequestDTO request = loginRequest("swapi", "swapi123");
+        return bearerToken("swapi", "swapi123");
+    }
+
+    private String bearerToken(String username, String password) throws Exception {
+        AuthLoginRequestDTO request = loginRequest(username, password);
 
         MvcResult result = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -158,6 +213,18 @@ class ApiIntegrationTest {
 
         String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("token").asText();
         return "Bearer " + token;
+    }
+
+    private void createUserWithSingleRole(String username, String rawPassword, String roleName) {
+        AppRole role = roleRepository.findByNameIgnoreCase(roleName)
+            .orElseThrow(() -> new IllegalStateException("Role not found in test: " + roleName));
+
+        AppUser user = new AppUser();
+        user.setUsername(username);
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        user.setEnabled(true);
+        user.getRoles().add(role);
+        userRepository.save(user);
     }
 
     private AuthLoginRequestDTO loginRequest(String username, String password) {

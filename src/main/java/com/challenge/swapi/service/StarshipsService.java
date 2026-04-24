@@ -1,9 +1,6 @@
 package com.challenge.swapi.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -17,9 +14,7 @@ import com.challenge.swapi.exception.ResourceNotFoundException;
 import com.challenge.swapi.exception.UpstreamServiceException;
 
 @Service
-public class StarshipsService {
-
-	private static final int SWAPI_FETCH_PAGE_SIZE = 50;
+public class StarshipsService extends AbstractPagedResourceService<StarshipDTO, StarshipsResponseDTO> {
 
 	private final SwapiClient swapiClient;
 
@@ -28,63 +23,44 @@ public class StarshipsService {
 	}
 
 	public StarshipsResponseDTO getStarships(String id, String name, int page, int size) {
-		if (!hasFilters(id, name)) {
-			return swapiClient.getStarships(page, size);
-		}
-
-		List<StarshipDTO> filtered = fetchAllStarships().stream()
-				.filter(s -> matchesId(s, id))
-				.filter(s -> matchesName(s, name))
-				.collect(Collectors.toList());
-
-		StarshipsResponseDTO response = new StarshipsResponseDTO();
-		response.setMessage("ok");
-		response.setTotal_records(filtered.size());
-		response.setTotal_pages((int) Math.ceil((double) filtered.size() / size));
-		response.setResults(paginate(filtered, page, size));
-		response.setPrevious(null);
-		response.setNext(null);
-		return response;
+		return getResources(id, name, page, size);
 	}
 
-	private List<StarshipDTO> fetchAllStarships() {
-		List<StarshipDTO> all = new ArrayList<>();
-		int page = 1;
-		int totalPages = 1;
-
-		while (page <= totalPages) {
-			StarshipsResponseDTO response = swapiClient.getStarships(page, SWAPI_FETCH_PAGE_SIZE);
-			if (response == null || response.getResults() == null || response.getResults().isEmpty()) {
-				break;
-			}
-			all.addAll(response.getResults());
-			totalPages = response.getTotal_pages() > 0 ? response.getTotal_pages() : page;
-			page++;
-		}
-
-		return all;
+	@Override
+	protected StarshipsResponseDTO fetchPage(int page, int size) {
+		return swapiClient.getStarships(page, size);
 	}
 
-	private boolean hasFilters(String id, String name) {
-		return id != null && !id.isBlank() || name != null && !name.isBlank();
+	@Override
+	protected List<StarshipDTO> extractResults(StarshipsResponseDTO response) {
+		return response == null ? null : response.getResults();
 	}
 
-	private boolean matchesId(StarshipDTO starship, String id) {
+	@Override
+	protected int extractTotalPages(StarshipsResponseDTO response) {
+		return response == null ? 0 : response.getTotal_pages();
+	}
+
+	@Override
+	protected boolean matchesId(StarshipDTO starship, String id) {
 		return id == null || id.isBlank() || id.equals(starship.getUid());
 	}
 
-	private boolean matchesName(StarshipDTO starship, String name) {
-		return name == null || name.isBlank()
-				|| starship.getName() != null && starship.getName().toLowerCase().contains(name.toLowerCase());
+	@Override
+	protected boolean matchesNameOrTitle(StarshipDTO starship, String nameOrTitle) {
+		return containsIgnoreCase(starship.getName(), nameOrTitle);
 	}
 
-	private List<StarshipDTO> paginate(List<StarshipDTO> results, int page, int size) {
-		int fromIndex = (page - 1) * size;
-		if (fromIndex >= results.size()) {
-			return Collections.emptyList();
-		}
-		int toIndex = Math.min(fromIndex + size, results.size());
-		return results.subList(fromIndex, toIndex);
+	@Override
+	protected StarshipsResponseDTO buildFilteredResponse(List<StarshipDTO> pagedResults, int totalRecords, int pageSize) {
+		StarshipsResponseDTO response = new StarshipsResponseDTO();
+		response.setMessage("ok");
+		response.setTotal_records(totalRecords);
+		response.setTotal_pages(calculateTotalPages(totalRecords, pageSize));
+		response.setResults(pagedResults);
+		response.setPrevious(null);
+		response.setNext(null);
+		return response;
 	}
 
 	public StarshipDetailResponseDTO getStarshipById(String id) {

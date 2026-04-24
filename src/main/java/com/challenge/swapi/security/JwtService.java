@@ -3,10 +3,14 @@ package com.challenge.swapi.security;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +29,20 @@ public class JwtService {
     @Value("${app.security.jwt.expiration-minutes:60}")
     private long jwtExpirationMinutes;
 
-    public String generateToken(String username) {
+    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
         Instant now = Instant.now();
         Instant expiration = now.plusSeconds(jwtExpirationMinutes * 60);
+        List<String> roles = authorities == null
+            ? Collections.emptyList()
+            : authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(this::normalizeRole)
+                .distinct()
+                .toList();
 
         return Jwts.builder()
             .subject(username)
+            .claim("roles", roles)
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiration))
             .signWith(signingKey())
@@ -48,8 +60,21 @@ public class JwtService {
 
         return username != null
             && username.equals(userDetails.getUsername())
+            && userDetails.isEnabled()
             && expiration != null
             && expiration.after(new Date());
+    }
+
+    public List<String> extractRoles(String token) {
+        Object roles = extractClaims(token).get("roles");
+        if (roles instanceof List<?> roleList) {
+            return roleList.stream()
+                .map(String::valueOf)
+                .map(this::normalizeRole)
+                .distinct()
+                .toList();
+        }
+        return Collections.emptyList();
     }
 
     private Claims extractClaims(String token) {
@@ -58,6 +83,13 @@ public class JwtService {
             .build()
             .parseSignedClaims(token)
             .getPayload();
+    }
+
+    private String normalizeRole(String authority) {
+        if (authority == null || authority.isBlank()) {
+            return authority;
+        }
+        return authority.startsWith("ROLE_") ? authority.substring("ROLE_".length()) : authority;
     }
 
     private SecretKey signingKey() {

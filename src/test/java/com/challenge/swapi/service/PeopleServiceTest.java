@@ -72,6 +72,20 @@ class PeopleServiceTest {
     }
 
     @Test
+    void getPeopleReturnsEmptyWhenFiltersHaveNoMatch() {
+        PeopleResponseDTO upstream = peopleResponse(
+            person("1", "Luke Skywalker"),
+            person("2", "Leia Organa")
+        );
+        when(swapiClient.getPeople(eq(1), eq(50))).thenReturn(upstream);
+
+        PeopleResponseDTO result = peopleService.getPeople("", "chewbacca", 1, 10);
+
+        assertThat(result.getResults()).isEmpty();
+        assertThat(result.getTotal_records()).isZero();
+    }
+
+    @Test
     void getPersonByIdReturnsDetailFromClient() {
         PersonDetailResponseDTO detail = personDetail("ok");
         when(swapiClient.getPersonById("1")).thenReturn(detail);

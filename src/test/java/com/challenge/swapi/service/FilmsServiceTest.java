@@ -76,6 +76,20 @@ class FilmsServiceTest {
     }
 
     @Test
+    void getFilmsReturnsEmptyWhenFilterHasNoMatch() {
+        FilmsResponseDTO upstream = filmsResponse(
+            film("1", "A New Hope"),
+            film("2", "The Empire Strikes Back")
+        );
+        when(swapiClient.getFilms(eq(1), eq(50))).thenReturn(upstream);
+
+        FilmsResponseDTO result = filmsService.getFilms("", "phantom", 1, 10);
+
+        assertThat(result.getResult()).isEmpty();
+        assertThat(result.getTotal_records()).isZero();
+    }
+
+    @Test
     void getFilmByIdReturnsDetailFromClient() {
         FilmDetailResponseDTO detail = filmDetail("ok");
         when(swapiClient.getFilmById("1")).thenReturn(detail);

@@ -19,8 +19,11 @@ public class SwapiClient {
 	private final RestTemplate restTemplate;
 	private final String baseUrl;
 
-	public SwapiClient(@Value("${swapi.base-url:https://www.swapi.tech/api}") String baseUrl) {
-		this.restTemplate = new RestTemplate();
+	public SwapiClient(
+		RestTemplate restTemplate,
+		@Value("${swapi.base-url:https://www.swapi.tech/api}") String baseUrl
+	) {
+		this.restTemplate = restTemplate;
 		this.baseUrl = normalizeBaseUrl(baseUrl);
 	}
 

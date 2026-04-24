@@ -73,6 +73,20 @@ class VehiclesServiceTest {
     }
 
     @Test
+    void getVehiclesReturnsEmptyWhenFilterHasNoMatch() {
+        VehiclesResponseDTO upstream = vehiclesResponse(
+            vehicle("4", "Sand Crawler"),
+            vehicle("6", "T-16 skyhopper")
+        );
+        when(swapiClient.getVehicles(eq(1), eq(50))).thenReturn(upstream);
+
+        VehiclesResponseDTO result = vehiclesService.getVehicles("", "walker", 1, 10);
+
+        assertThat(result.getResults()).isEmpty();
+        assertThat(result.getTotal_records()).isZero();
+    }
+
+    @Test
     void getVehicleByIdReturnsDetailFromClient() {
         VehicleDetailResponseDTO detail = vehicleDetail("ok");
         when(swapiClient.getVehicleById("1")).thenReturn(detail);

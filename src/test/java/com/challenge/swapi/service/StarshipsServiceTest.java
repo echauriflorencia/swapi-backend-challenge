@@ -73,6 +73,20 @@ class StarshipsServiceTest {
     }
 
     @Test
+    void getStarshipsReturnsEmptyWhenFilterHasNoMatch() {
+        StarshipsResponseDTO upstream = starshipsResponse(
+            starship("1", "Death Star"),
+            starship("2", "X-wing")
+        );
+        when(swapiClient.getStarships(eq(1), eq(50))).thenReturn(upstream);
+
+        StarshipsResponseDTO result = starshipsService.getStarships("", "falcon", 1, 10);
+
+        assertThat(result.getResults()).isEmpty();
+        assertThat(result.getTotal_records()).isZero();
+    }
+
+    @Test
     void getStarshipByIdReturnsDetailFromClient() {
         StarshipDetailResponseDTO detail = starshipDetail("ok");
         when(swapiClient.getStarshipById("1")).thenReturn(detail);

@@ -2,6 +2,7 @@ package com.challenge.swapi.controller;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -34,15 +35,15 @@ public class AuthController {
         }
 
         try {
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
+
+            String token = jwtService.generateToken(authentication.getName(), authentication.getAuthorities());
+            return new AuthLoginResponseDTO(token, "Bearer");
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
-
-        String token = jwtService.generateToken(request.getUsername());
-        return new AuthLoginResponseDTO(token, "Bearer");
     }
 
     private boolean isBlank(String value) {

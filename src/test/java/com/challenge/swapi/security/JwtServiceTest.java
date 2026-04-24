@@ -16,12 +16,13 @@ class JwtServiceTest {
         ReflectionTestUtils.setField(jwtService, "jwtSecret", "changeit-changeit-changeit-changeit");
         ReflectionTestUtils.setField(jwtService, "jwtExpirationMinutes", 60L);
 
-        String token = jwtService.generateToken("swapi");
-        UserDetails userDetails = User.withUsername("swapi").password("x").authorities("USER").build();
+        UserDetails userDetails = User.withUsername("swapi").password("x").authorities("ROLE_USER", "ROLE_ADMIN").build();
+        String token = jwtService.generateToken("swapi", userDetails.getAuthorities());
 
         assertThat(token).isNotBlank();
         assertThat(jwtService.extractUsername(token)).isEqualTo("swapi");
         assertThat(jwtService.isTokenValid(token, userDetails)).isTrue();
+        assertThat(jwtService.extractRoles(token)).containsExactlyInAnyOrder("ADMIN", "USER");
     }
 
     @Test
@@ -30,7 +31,7 @@ class JwtServiceTest {
         ReflectionTestUtils.setField(jwtService, "jwtSecret", "short-secret");
         ReflectionTestUtils.setField(jwtService, "jwtExpirationMinutes", 60L);
 
-        assertThatThrownBy(() -> jwtService.generateToken("swapi"))
+        assertThatThrownBy(() -> jwtService.generateToken("swapi", java.util.List.of()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("JWT secret must be at least 32 bytes long");
     }
